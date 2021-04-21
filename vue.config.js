@@ -1,23 +1,24 @@
+// const HtmlWebpackPlugin = require("html-webpack-plugin");
+const { execSync } = require("child_process");
+const SymlinkWebpackPlugin = require("symlink-webpack-plugin");
+
+const UUID = process.env.UUID || execSync("git rev-parse --short HEAD").toString().trim();
+
+console.log(`COMPILING Holodex UI Revision ${UUID}`);
+
 module.exports = {
     chainWebpack: (config) => {
-        // if (process.env.STORYBOOK && process.env.STORYBOOK.trim() === "true") {
-        //     console.info("info => Updating webpack using chain-webpack");
-        //     // eslint-disable-next-line no-param-reassign
-        //     config.module
-        //         .rule("addon-storysource")
-        //         .enforce()
-        //         .pre()
-        //         .test(/\.stories\.jsx?$/)
-        //         .use("@storybook/addon-storysource/loader")
-        //         .loader("@storybook/addon-storysource/loader")
-        //         .options({
-        //             semi: false,
-        //             printWidth: 120,
-        //             singleQuote: true,
-        //         })
-        //         .end();
-        // }
+        if (process.env.NODE_ENV === "production") {
+            config.plugin("html-index").tap((opts) => {
+                opts[0].filename = `index.${UUID}.html`;
+                return opts;
+            });
+        }
+
         return config;
+    },
+    configureWebpack: {
+        plugins: [new SymlinkWebpackPlugin({ origin: `index.${UUID}.html`, symlink: "index.html" })],
     },
     css: {
         extract: process.env.NODE_ENV !== "production" ? undefined : { ignoreOrder: true },
@@ -41,6 +42,7 @@ module.exports = {
         scope: "/",
         start_url: "/?utm_source=homescreen",
         workboxOptions: {
+            directoryIndex: `index.${UUID}.html`,
             runtimeCaching: [
                 {
                     urlPattern: new RegExp("https://fonts.(?:googleapis|gstatic).com/(.*)"),
