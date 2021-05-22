@@ -196,6 +196,7 @@ views:
     sort:
       newest: Newest
       oldest: Oldest
+      none: None
     type:
       all: All
       official: Official

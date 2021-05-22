@@ -27,12 +27,15 @@
         </template>
         <template v-for="relation in Object.keys(related)">
             <template v-if="related[relation].length">
-                <div class="text-overline ma-2" :key="`${relation}-title`">
+                <div class="text-overline ma-2 related-title" :key="`${relation}-title`">
                     {{ relationI18N(relation) }}
+                    <div class="relation-sort-by">
+                        <v-select dense :items="options.sort" :label="$t('views.search.sortByLabel')"></v-select>
+                    </div>
                 </div>
                 <VideoCardList
                     :key="`${relation}-videos`"
-                    :videos="related[relation]"
+                    :videos="sortRelation(related[relation], 'titleZA')"
                     horizontal
                     includeChannel
                     :cols="{
@@ -72,6 +75,30 @@ export default {
         return {
             showDetailed: false,
             mdiTimerOutline,
+            options: {
+                sort: [
+                    {
+                        text: this.$t("views.search.sort.none"),
+                        value: "none",
+                    },
+                    {
+                        text: this.$t("views.search.sort.newest"),
+                        value: "newest",
+                    },
+                    {
+                        text: this.$t("views.search.sort.oldest"),
+                        value: "oldest",
+                    },
+                    {
+                        text: this.$t("views.search.sort.titleAZ"),
+                        value: "titleAZ",
+                    },
+                    {
+                        text: this.$t("views.search.sort.titleZA"),
+                        value: "titleZA",
+                    },
+                ],
+            },
         };
     },
     computed: {
@@ -128,8 +155,53 @@ export default {
                     return "";
             }
         },
+        sortRelation(list, relation) {
+            switch (relation) {
+                case "none":
+                    return list;
+                case "newest":
+                    return list.sort((a, b) => {
+                        return a.available_at > b.available_at ? -1 : 1;
+                    });
+                case "oldest":
+                    return list.sort((a, b) => {
+                        return a.available_at < b.available_at ? -1 : 1;
+                    });
+                case "titleAZ":
+                    return list.sort((a, b) => {
+                        const titleA = a.title.toUpperCase();
+                        const titleB = b.title.toUpperCase();
+                        if (titleA < titleB) {
+                            return -1;
+                        }
+                        return titleA > titleB ? 1 : 0;
+                    });
+                case "titleZA":
+                    return list.sort((a, b) => {
+                        const titleA = a.title.toUpperCase();
+                        const titleB = b.title.toUpperCase();
+                        if (titleA > titleB) {
+                            return -1;
+                        }
+                        return titleA < titleB ? 1 : 0;
+                    });
+                default:
+                    return list;
+            }
+        },
     },
 };
 </script>
 
-<style></style>
+<style>
+.related-title {
+    padding-top: 1em;
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+}
+.relation-sort-by {
+    padding-left: 1em;
+    max-width: 70%;
+}
+</style>
